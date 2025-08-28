@@ -1,6 +1,7 @@
-Flask==2.3.3
-supabase==1.0.3
-python-dotenv==1.0.0
-pydantic==2.6.0  # ✅ MUDOU para versão compatível
-python-multipart==0.0.6
-gunicorn==21.2.0
+Flask==2.2.5
+supabase-py==0.7.0  # Versão alternativa
+python-dotenv==0.19.2
+pydantic==1.10.12  # Versão 1.x (mais estável)
+python-multipart==0.0.5
+gunicorn==20.1.0
+
