@@ -1,0 +1,133 @@
+.status-badge {
+    font-size: 0.85rem;
+    padding: 0.35em 0.65em;
+}
+.card-header {
+    font-weight: 600;
+}
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+.nav-tabs .nav-link.active {
+    font-weight: 600;
+    border-bottom: 3px solid #0d6efd;
+}
+.action-btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+.upload-area {
+    border: 2px dashed #ccc;
+    padding: 20px;
+    text-align: center;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+.upload-area:hover {
+    background-color: #e9ecef;
+}
+.document-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+.login-container {
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+
+/* ========== LIGHTBOX STYLES (OTIMIZADO) ========== */
+
+/* Remove o backdrop global padrão do Bootstrap */
+#lightboxModal ~ .modal-backdrop {
+    display: none !important;
+}
+
+/* Fundo escuro apenas DENTRO do lightbox */
+#lightboxModal .modal-content {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(20, 20, 20, 0.95)) !important;
+    border: none;
+    border-radius: 15px;
+    padding: 30px 25px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    max-width: 90vw;
+    margin: 0 auto;
+}
+
+/* Botão de fechar estilizado */
+#lightboxModal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+#lightboxModal .btn-close:hover {
+    opacity: 1;
+}
+
+/* Imagem do lightbox */
+#lightboxImage {
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+    max-height: 60vh;
+    object-fit: contain;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0 auto;
+    display: block;
+}
+
+/* Miniaturas na galeria */
+.img-thumbnail:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Botões de navegação */
+.lightbox-nav-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: none;
+    opacity: 0.8;
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+.lightbox-nav-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 1) !important;
+}
+
+/* Contador de fotos */
+.photo-counter {
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Container dos controles */
+#lightboxModal .mt-3 {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 12px 25px;
+    border-radius: 25px;
+    margin-top: 25px !important;
+    backdrop-filter: blur(5px);
+}
+
+/* permitir links no preview */
+#textoRelatorio a {
+    color: #007bff;
+    text-decoration: underline;
+    cursor: pointer;
+}

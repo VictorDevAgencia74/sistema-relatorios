@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios Exportados</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .badge { padding: 5px 10px; border-radius: 4px; color: white; font-size: 12px; }
+        .bg-warning { background-color: #f39c12; }
+        .bg-success { background-color: #27ae60; }
+        .info { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Relatórios Exportados</h1>
+    
+    <div class="info">
+        <p><strong>Data da exportação:</strong> {{ datetime.now().strftime('%d/%m/%Y %H:%M:%S') }}</p>
+        <p><strong>Total de relatórios:</strong> {{ relatorios|length }}</p>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Data/Hora</th>
+                <th>Tipo</th>
+                <th>Porteiro</th>
+                <th>Status</th>
+                <th>Resumo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for relatorio in relatorios %}
+            <tr>
+                <td>
+                    {% if relatorio.criado_em %}
+                        {{ relatorio.criado_em.strftime('%d/%m/%Y %H:%M:%S') }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>{{ relatorio.tipos_relatorio.nome if relatorio.tipos_relatorio else relatorio.tipo_nome if relatorio.tipo_nome else relatorio.tipo_id if relatorio.tipo_id else 'N/A' }}</td>
+                <td>{{ relatorio.porteiros.nome if relatorio.porteiros else relatorio.porteiro_nome if relatorio.porteiro_nome else relatorio.porteiro_id if relatorio.porteiro_id else 'N/A' }}</td>
+                <td>
+                    <span class="badge {% if relatorio.status == 'PENDENTE' %}bg-warning{% else %}bg-success{% endif %}">
+                        {{ relatorio.status }}
+                    </span>
+                </td>
+                <td>
+                    {% if relatorio.dados %}
+                        {% if relatorio.dados is string %}
+                            {% set linhas = relatorio.dados.split('\n') %}
+                            {% set resumo = linhas[:3]|join(' | ') %}
+                            {{ resumo[:50] }}{% if resumo|length > 50 %}...{% endif %}
+                        {% else %}
+                            {{ relatorio.dados|string|truncate(50) }}
+                        {% endif %}
+                    {% else %}
+                        Nenhum conteúdo
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
