@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 import logging
 import traceback
 import uuid
-import re
 
 # Carregar variáveis de ambiente
 load_dotenv()
