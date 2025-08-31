@@ -6,7 +6,7 @@ let fotosArray = [];
 let currentPhotoIndex = 0;
 
 function ampliarFoto(urlFoto, index = 0) {
-    console.log('🔍 ampliarFoto chamada:', urlFoto, index);
+    // console.log('🔍 ampliarFoto chamada:', urlFoto, index);
     
     // Coletar todas as fotos disponíveis
     const photoElements = document.querySelectorAll('#galeria-fotos img');
@@ -662,7 +662,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Função para ver relatório detalhado
     async function verRelatorioDetalhado(id) {
         try {
-            console.log("Buscando relatório com ID:", id);
+            // console.log("Buscando relatório com ID:", id);
             
             const response = await fetch(`/api/relatorios/${encodeURIComponent(id)}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -694,11 +694,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (relatorio.fotos) {
                 try {
-                    console.log('Fotos do relatório:', relatorio.fotos);
+                    // console.log('Fotos do relatório:', relatorio.fotos);
                     
                     // Processar as fotos
                     fotosArray = processarFotos(relatorio.fotos);
-                    console.log('Fotos processadas:', fotosArray);
+                    // console.log('Fotos processadas:', fotosArray);
                     
                     // Gera o HTML das miniaturas
                     if (fotosArray.length > 0) {

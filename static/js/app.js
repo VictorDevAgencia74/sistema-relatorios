@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const tipoId = this.value;
                 const tipoSelecionado = tiposRelatorio.find(t => t.id == tipoId);
                 
-                console.log('Tipo selecionado:', tipoSelecionado);
+                // console.log('Tipo selecionado:', tipoSelecionado);
                 
                 if (!tipoSelecionado) {
                     if (formContainer) formContainer.innerHTML = '';
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (data.success && data.user.setor === 'porteiro') {
                 usuarioLogado = data.user;
-                console.log('Usuário autenticado:', usuarioLogado);
+                // console.log('Usuário autenticado:', usuarioLogado);
                 
                 // Mostrar nome do porteiro
                 if (nomePorteiro) {
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             tiposRelatorio = await response.json();
-            console.log('Tipos de relatório carregados:', tiposRelatorio);
+            // console.log('Tipos de relatório carregados:', tiposRelatorio);
             
             if (tipoRelatorio && tiposRelatorio.length > 0) {
                 tipoRelatorio.innerHTML = '<option value="">Selecione o tipo de relatório</option>';
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 ? JSON.parse(tipo.campos) 
                 : tipo.campos;
             
-            console.log('Campos parseados:', campos);
+            // console.log('Campos parseados:', campos);
             
             campos.forEach(campo => {
                 const div = document.createElement('div');
