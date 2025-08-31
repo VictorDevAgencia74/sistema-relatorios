@@ -359,8 +359,45 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Função para enviar relatório - CORREÇÃO PRINCIPAL AQUI
-    // Função para enviar relatório - COM URLS REAIS DAS FOTOS
+    // Função para copiar texto com fallback
+    async function copiarParaAreaTransferencia(texto) {
+        try {
+            // Tentativa com Clipboard API moderna
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(texto);
+                console.log('Texto copiado para a área de transferência (Clipboard API)');
+                return true;
+            } else {
+                // Fallback para método antigo
+                const textarea = document.createElement('textarea');
+                textarea.value = texto;
+                textarea.style.position = 'fixed';
+                textarea.style.left = '-9999px';
+                textarea.style.top = '0';
+                textarea.setAttribute('readonly', '');
+                document.body.appendChild(textarea);
+                
+                textarea.select();
+                textarea.setSelectionRange(0, 99999);
+                
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textarea);
+                
+                if (successful) {
+                    console.log('Texto copiado para a área de transferência (fallback)');
+                    return true;
+                } else {
+                    console.error('Falha ao copiar texto com ambos os métodos');
+                    return false;
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao copiar texto:', error);
+            return false;
+        }
+    }
+    
+    // Função para enviar relatório - COM SISTEMA DE CÓPIA CORRIGIDO
     async function enviarRelatorio() {
         if (!btnEnviar) return;
         
@@ -436,7 +473,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (data.success) {
-                // ✅ NOVO: Substituir FOTO1, FOTO2, etc. pelas URLs reais
+                // ✅ Substituir FOTO1, FOTO2, etc. pelas URLs reais
                 let textoComUrls = textoRelatorioContent;
                 
                 if (data.fotosUrls && data.fotosUrls.length > 0) {
@@ -446,12 +483,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
 
-                // Copiar texto COM URLs para área de transferência
-                try {
-                    await navigator.clipboard.writeText(textoComUrls);
-                    console.log('Texto com URLs copiado para a área de transferência');
-                } catch (copyError) {
-                    console.error('Falha ao copiar texto:', copyError);
+                // ✅ USAR NOVO SISTEMA DE CÓPIA COM FALLBACK
+                const copiadoComSucesso = await copiarParaAreaTransferencia(textoComUrls);
+                
+                if (copiadoComSucesso) {
+                    mostrarAlerta('Relatório enviado com sucesso e copiado para área de transferência!', 'success');
+                } else {
+                    mostrarAlerta('Relatório enviado! (Não foi possível copiar automaticamente)', 'warning');
                 }
 
                 // Enviar para WhatsApp com URLs reais
@@ -463,8 +501,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.open(`https://wa.me/${destino}?text=${textoCodificado}`, '_blank');
                 }
 
-                mostrarAlerta('Relatório enviado com sucesso e copiado para área de transferência!', 'success');
-                
                 // Limpa formulário
                 if (tipoSelect) tipoSelect.value = '';
                 if (formContainer) formContainer.innerHTML = '';
