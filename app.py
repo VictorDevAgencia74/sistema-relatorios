@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, send_file
 from supabase import create_client, Client
 import os
 from datetime import datetime
@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import logging
 import traceback
 import uuid
+from backup import create_backup, get_backup_status, list_backups
 
 # Carregar variáveis de ambiente
 load_dotenv()
@@ -692,6 +693,100 @@ def exportar_html():
         return jsonify(
             {'success': False, 'message': 'Erro ao exportar relatórios'}
         ), 500
+
+# ==================== ROTAS DE BACKUP ====================
+
+@app.route('/api/backup/criar', methods=['POST'])
+@require_login
+def criar_backup():
+    """Cria um novo backup manual"""
+    try:
+        if session['user'].get('setor') != 'admin':
+            return jsonify({'success': False, 'message': 'Apenas administradores podem criar backups'}), 403
+        
+        backup_type = request.json.get('tipo', 'manual') if request.json else 'manual'
+        result = create_backup(backup_type)
+        
+        if result['status'] == 'completed':
+            return jsonify({
+                'success': True, 
+                'message': f'Backup criado com sucesso: {result["name"]}',
+                'backup': result
+            })
+        else:
+            return jsonify({
+                'success': False, 
+                'message': f'Erro ao criar backup: {result.get("error", "Erro desconhecido")}',
+                'backup': result
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"Erro ao criar backup: {e}")
+        return jsonify({'success': False, 'message': f'Erro interno: {str(e)}'}), 500
+
+@app.route('/api/backup/status')
+@require_login
+def status_backup():
+    """Retorna status dos backups"""
+    try:
+        if session['user'].get('setor') != 'admin':
+            return jsonify({'success': False, 'message': 'Apenas administradores podem acessar status dos backups'}), 403
+        
+        status = get_backup_status()
+        return jsonify({'success': True, 'status': status})
+        
+    except Exception as e:
+        logger.error(f"Erro ao obter status dos backups: {e}")
+        return jsonify({'success': False, 'message': f'Erro interno: {str(e)}'}), 500
+
+@app.route('/api/backup/listar')
+@require_login
+def listar_backups():
+    """Lista todos os backups existentes"""
+    try:
+        if session['user'].get('setor') != 'admin':
+            return jsonify({'success': False, 'message': 'Apenas administradores podem listar backups'}), 403
+        
+        backups = list_backups()
+        return jsonify({'success': True, 'backups': backups})
+        
+    except Exception as e:
+        logger.error(f"Erro ao listar backups: {e}")
+        return jsonify({'success': False, 'message': f'Erro interno: {str(e)}'}), 500
+
+@app.route('/api/backup/download/<int:backup_id>')
+@require_login
+def download_backup(backup_id):
+    """Download de um backup específico"""
+    try:
+        if session['user'].get('setor') != 'admin':
+            return jsonify({'success': False, 'message': 'Apenas administradores podem baixar backups'}), 403
+        
+        backups = list_backups()
+        backup = next((b for b in backups if b['id'] == backup_id), None)
+        
+        if not backup:
+            return jsonify({'success': False, 'message': 'Backup não encontrado'}), 404
+        
+        if backup['status'] != 'completed':
+            return jsonify({'success': False, 'message': 'Backup não está completo'}), 400
+        
+        zip_path = backup['zip_path']
+        if not os.path.exists(zip_path):
+            return jsonify({'success': False, 'message': 'Arquivo de backup não encontrado'}), 404
+        
+        return send_file(
+            zip_path, 
+            as_attachment=True, 
+            download_name=f"{backup['name']}.zip",
+            mimetype='application/zip'
+        )
+        
+    except Exception as e:
+        logger.error(f"Erro ao baixar backup {backup_id}: {e}")
+        return jsonify({'success': False, 'message': f'Erro interno: {str(e)}'}), 500
+
+# ==================== FIM DAS ROTAS DE BACKUP ====================
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
