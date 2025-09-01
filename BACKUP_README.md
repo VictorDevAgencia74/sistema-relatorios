@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-O sistema de backup foi implementado para proteger os dados e arquivos do sistema de relatórios. Ele cria backups automáticos e manuais de todos os componentes importantes do sistema.
+O sistema de backup foi implementado para proteger os dados e arquivos do sistema de relatórios. Ele cria backups automáticos e manuais de todos os componentes importantes do sistema. **As funcionalidades de backup estão disponíveis apenas via backend/API, não há mais interface web para backup.**
 
 ## Funcionalidades
 
@@ -12,8 +12,8 @@ O sistema de backup foi implementado para proteger os dados e arquivos do sistem
 - **Configurável**: Pode ser ajustado no arquivo `backup.py`
 
 ### ✅ Backup Manual
-- **Interface Web**: Botões na página de administração
 - **API REST**: Endpoints para integração com outros sistemas
+- **Python Direto**: Funções para uso programático
 - **Logs Detalhados**: Registro de todas as operações
 
 ### ✅ Componentes do Backup
@@ -24,21 +24,21 @@ O sistema de backup foi implementado para proteger os dados e arquivos do sistem
 
 ## Como Usar
 
-### 1. Interface Web (Recomendado)
+### ⚠️ **IMPORTANTE**: Interface Web Removida
 
-1. **Acesse a página de administração** (`/admin`)
-2. **Faça login como administrador**
-3. **Use os botões na seção "Sistema de Backup":**
-   - **Criar Backup**: Cria um novo backup manual
-   - **Status**: Mostra estatísticas do sistema
-   - **Listar Backups**: Abre modal com histórico completo
+**A interface web para backup foi removida do frontend.** As funcionalidades de backup agora estão disponíveis apenas via:
 
-### 2. API REST
+1. **API REST** (recomendado para integrações)
+2. **Python direto** (para scripts e automação)
+3. **Backup automático** (executado em background)
+
+### 1. API REST
 
 #### Criar Backup
 ```bash
 POST /api/backup/criar
 Content-Type: application/json
+Authorization: Required (apenas administradores)
 
 {
   "tipo": "manual"
@@ -48,19 +48,22 @@ Content-Type: application/json
 #### Ver Status
 ```bash
 GET /api/backup/status
+Authorization: Required (apenas administradores)
 ```
 
 #### Listar Backups
 ```bash
 GET /api/backup/listar
+Authorization: Required (apenas administradores)
 ```
 
 #### Download de Backup
 ```bash
 GET /api/backup/download/{id}
+Authorization: Required (apenas administradores)
 ```
 
-### 3. Python Direto
+### 2. Python Direto
 
 ```python
 from backup import create_backup, get_backup_status, list_backups
@@ -73,6 +76,33 @@ status = get_backup_status()
 
 # Listar backups
 backups = list_backups()
+```
+
+### 3. Scripts de Automação
+
+```python
+#!/usr/bin/env python3
+# backup_script.py
+
+import schedule
+import time
+from backup import create_backup, get_backup_status
+
+def backup_job():
+    print("Executando backup programado...")
+    result = create_backup('scheduled')
+    if result['status'] == 'completed':
+        print(f"Backup concluído: {result['name']}")
+    else:
+        print(f"Erro no backup: {result.get('error', 'Erro desconhecido')}")
+
+# Agendar backup diário às 3:00
+schedule.every().day.at("03:00").do(backup_job)
+
+# Executar agendamentos
+while True:
+    schedule.run_pending()
+    time.sleep(60)
 ```
 
 ## Estrutura dos Backups
@@ -171,6 +201,9 @@ print(f"Espaço total: {status['total_size_mb']} MB")
 ### Problema: Erro de permissão
 **Solução**: Verificar permissões de escrita na pasta de backups
 
+### Problema: API retorna erro 403
+**Solução**: Verificar se o usuário tem privilégios de administrador
+
 ## Segurança
 
 ### Acesso
@@ -222,6 +255,50 @@ else:
 4. **Metadados**: Ler informações do backup
 5. **Disponibilização**: Arquivos prontos para uso
 
+## Integração com Outros Sistemas
+
+### Webhook para Backup
+```python
+import requests
+
+def notify_backup_complete(backup_info):
+    webhook_url = "https://seu-sistema.com/webhook/backup"
+    payload = {
+        "event": "backup_completed",
+        "backup_id": backup_info['id'],
+        "backup_name": backup_info['name'],
+        "timestamp": backup_info['timestamp'],
+        "size_mb": backup_info['size'] / (1024 * 1024)
+    }
+    
+    response = requests.post(webhook_url, json=payload)
+    if response.status_code == 200:
+        print("Notificação enviada com sucesso")
+    else:
+        print(f"Erro ao enviar notificação: {response.status_code}")
+```
+
+### Monitoramento Externo
+```python
+# Verificar status periodicamente
+import time
+from backup import get_backup_status
+
+def monitor_backup_system():
+    while True:
+        status = get_backup_status()
+        
+        # Alertar se não há backups recentes
+        if status['last_backup']:
+            last_backup_time = datetime.fromisoformat(status['last_backup']['timestamp'])
+            days_since_backup = (datetime.now() - last_backup_time).days
+            
+            if days_since_backup > 2:
+                print(f"ALERTA: Último backup há {days_since_backup} dias!")
+        
+        time.sleep(3600)  # Verificar a cada hora
+```
+
 ## Recomendações
 
 ### Frequência
@@ -238,6 +315,12 @@ else:
 - **Logs**: Verificar regularmente os logs de backup
 - **Espaço**: Monitorar uso de disco
 - **Testes**: Testar restauração periodicamente
+- **API**: Monitorar endpoints de backup para falhas
+
+### Automação
+- **Scripts**: Criar scripts para backup programado
+- **Webhooks**: Configurar notificações automáticas
+- **Monitoramento**: Implementar verificação de saúde do sistema
 
 ## Suporte
 
@@ -245,11 +328,13 @@ Para problemas ou dúvidas sobre o sistema de backup:
 
 1. **Verificar logs** do sistema
 2. **Consultar** este documento
-3. **Testar** funcionalidades básicas
-4. **Contatar** equipe de desenvolvimento
+3. **Testar** funcionalidades via API
+4. **Verificar** autenticação e permissões
+5. **Contatar** equipe de desenvolvimento
 
 ---
 
 **Última atualização**: Agosto 2025  
-**Versão**: 1.0  
-**Autor**: Sistema de Relatórios
+**Versão**: 2.0 (Frontend removido)  
+**Autor**: Sistema de Relatórios  
+**Nota**: Interface web removida - backup disponível apenas via API e Python
