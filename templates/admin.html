@@ -7,27 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <style>
-        .status-badge {
-            font-size: 0.8em;
-        }
-        .alert {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 1050;
-            min-width: 300px;
-        }
-        .img-thumbnail {
-            transition: transform 0.2s ease;
-        }
-        .img-thumbnail:hover {
-            transform: scale(1.05);
-        }
-        .table-responsive {
-            min-height: 400px;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -80,6 +60,18 @@
                                 <option value="COBRADO">Cobrado</option>
                             </select>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Número OS</label>
+                            <input type="text" id="filtroNumeroOS" class="form-control" placeholder="Ex: OS-2024-000001">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Matrícula</label>
+                            <input type="text" id="filtroMatricula" class="form-control" placeholder="Ex: 12345">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Carro/Veículo</label>
+                            <input type="text" id="filtroCarro" class="form-control" placeholder="Ex: ABC-1234">
+                        </div>
                         <button id="btnFiltrar" class="btn btn-primary w-100">
                             <i class="bi bi-funnel"></i> Aplicar Filtros
                         </button>
@@ -122,19 +114,20 @@
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Data</th>
-                                        <th>Tipo</th>
-                                        <th>Porteiro</th>
-                                        <th>Status</th>
-                                        <th>Resumo</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
+                                                                  <thead>
+                                      <tr>
+                                         <th class="text-nowrap">Número OS</th>
+                                         <th class="text-nowrap">Data</th>
+                                         <th class="text-nowrap">Motorista</th>
+                                         <th class="text-nowrap">Veículo</th>
+                                         <th class="text-nowrap">Tipo</th>
+                                         <th class="text-nowrap">Status</th>
+                                         <th class="text-nowrap">Ações</th>
+                                      </tr>
+                                  </thead>
                                 <tbody id="tabelaRelatorios">
                                     <tr>
-                                        <td colspan="6" class="text-center">
+                                        <td colspan="7" class="text-center">
                                             <div class="spinner-border text-primary" role="status">
                                                 <span class="visually-hidden">Carregando...</span>
                                             </div>
@@ -159,7 +152,7 @@
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h2 class="modal-title fs-5" id="modalTitulo">Detalhes do Relatório</h2>
+                    <h2 class="modal-title fs-5" id="modalTitulo">Relatório</h2>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar modal"></button>
                 </div>
                 <div class="modal-body" id="modalCorpo">

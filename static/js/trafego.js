@@ -105,9 +105,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const motorista = ocorrencia.motorista || 'N/A';
             const valor = ocorrencia.valor ? `R$ ${ocorrencia.valor.toFixed(2)}` : 'R$ 0,00';
             
+            const numeroOS = ocorrencia.numero_os || 'N/A';
+            
             return `
                 <tr>
-                    <td>${ocorrencia.id}</td>
+                    <td><strong class="text-primary">${numeroOS}</strong></td>
                     <td>${dataFormatada}</td>
                     <td>${porteiroNome}</td>
                     <td>${motorista}</td>
@@ -130,6 +132,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!ocorrenciaSelecionada) return;
         
         // Preencher dados da ocorrência
+        const numeroOS = ocorrenciaSelecionada.numero_os || 'N/A';
+        document.getElementById('trafegoModalNumeroOS').textContent = numeroOS;
         document.getElementById('trafegoOcorrenciaId').textContent = ocorrenciaSelecionada.id;
         document.getElementById('trafegoData').textContent = new Date(ocorrenciaSelecionada.criado_em).toLocaleString('pt-BR');
         document.getElementById('trafegoPorteiro').textContent = ocorrenciaSelecionada.porteiros?.nome || ocorrenciaSelecionada.porteiro_nome || 'N/A';

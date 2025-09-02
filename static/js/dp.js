@@ -104,9 +104,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const tipoNome = ocorrencia.tipos_relatorio?.nome || ocorrencia.tipo_nome || ocorrencia.tipo_id || 'N/A';
             const porteiroNome = ocorrencia.porteiros?.nome || ocorrencia.porteiro_nome || ocorrencia.porteiro_id || 'N/A';
             
+            const numeroOS = ocorrencia.numero_os || 'N/A';
+            
             return `
                 <tr>
-                    <td>${ocorrencia.id}</td>
+                    <td><strong class="text-primary">${numeroOS}</strong></td>
                     <td>${dataFormatada}</td>
                     <td>${porteiroNome}</td>
                     <td>${tipoNome}</td>
@@ -131,6 +133,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!ocorrenciaSelecionada) return;
         
         // Preencher dados da ocorrência
+        const numeroOS = ocorrenciaSelecionada.numero_os || 'N/A';
+        document.getElementById('dpModalNumeroOS').textContent = numeroOS;
         document.getElementById('dpOcorrenciaId').textContent = ocorrenciaSelecionada.id;
         document.getElementById('dpData').textContent = new Date(ocorrenciaSelecionada.criado_em).toLocaleString('pt-BR');
         document.getElementById('dpPorteiro').textContent = ocorrenciaSelecionada.porteiros?.nome || ocorrenciaSelecionada.porteiro_nome || 'N/A';

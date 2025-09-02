@@ -27,6 +27,7 @@
     <table>
         <thead>
             <tr>
+                <th>Número OS</th>
                 <th>Data/Hora</th>
                 <th>Tipo</th>
                 <th>Porteiro</th>
@@ -37,6 +38,7 @@
         <tbody>
             {% for relatorio in relatorios %}
             <tr>
+                <td><strong>{{ relatorio.numero_os if relatorio.numero_os else 'N/A' }}</strong></td>
                 <td>
                     {% if relatorio.criado_em %}
                         {{ relatorio.criado_em.strftime('%d/%m/%Y %H:%M:%S') }}
@@ -53,20 +55,4 @@
                 </td>
                 <td>
                     {% if relatorio.dados %}
-                        {% if relatorio.dados is string %}
-                            {% set linhas = relatorio.dados.split('\n') %}
-                            {% set resumo = linhas[:3]|join(' | ') %}
-                            {{ resumo[:50] }}{% if resumo|length > 50 %}...{% endif %}
-                        {% else %}
-                            {{ relatorio.dados|string|truncate(50) }}
-                        {% endif %}
-                    {% else %}
-                        Nenhum conteúdo
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+                        {% if relatorio.dados is stri

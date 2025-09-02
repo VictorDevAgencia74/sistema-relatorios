@@ -149,7 +149,10 @@ document.addEventListener('DOMContentLoaded', function() {
         porteiro: null,
         dataInicio: null,
         dataFim: null,
-        status: null
+        status: null,
+        numeroOS: null,
+        matricula: null,
+        carro: null
     };
     let relatorioSelecionado = null;
     
@@ -327,16 +330,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Aplicar filtros
+        // Aplicar filtros
     async function aplicarFiltros() {
         const tipoSelecionado = document.getElementById('filtroTipo').value;
         const porteiroSelecionado = document.getElementById('filtroPorteiro').value;
         const statusSelecionado = document.getElementById('filtroStatus').value;
-
+        const numeroOSSelecionado = document.getElementById('filtroNumeroOS').value;
+        const matriculaSelecionada = document.getElementById('filtroMatricula').value;
+        const carroSelecionado = document.getElementById('filtroCarro').value;
+        
         filtrosAtivos.tipo = tipoSelecionado || null;
         filtrosAtivos.porteiro = porteiroSelecionado || null;
         filtrosAtivos.status = statusSelecionado || null;
-
+        filtrosAtivos.numeroOS = numeroOSSelecionado || null;
+        filtrosAtivos.matricula = matriculaSelecionada || null;
+        filtrosAtivos.carro = carroSelecionado || null;
+        
         await carregarRelatorios();
         await carregarEstatisticas();
     }
@@ -346,6 +355,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('filtroTipo').value = '';
         document.getElementById('filtroPorteiro').value = '';
         document.getElementById('filtroStatus').value = '';
+        document.getElementById('filtroNumeroOS').value = '';
+        document.getElementById('filtroMatricula').value = '';
+        document.getElementById('filtroCarro').value = '';
         
         const datepicker = document.getElementById('filtroData');
         if (datepicker._flatpickr) {
@@ -357,7 +369,10 @@ document.addEventListener('DOMContentLoaded', function() {
             porteiro: null,
             dataInicio: null,
             dataFim: null,
-            status: null
+            status: null,
+            numeroOS: null,
+            matricula: null,
+            carro: null
         };
 
         currentPage = 1;
@@ -387,6 +402,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (filtrosAtivos.tipo) params.append('tipo', filtrosAtivos.tipo);
             if (filtrosAtivos.porteiro) params.append('porteiro', filtrosAtivos.porteiro);
             if (filtrosAtivos.status) params.append('status', filtrosAtivos.status);
+            if (filtrosAtivos.numeroOS) params.append('numero_os', filtrosAtivos.numeroOS);
+            if (filtrosAtivos.matricula) params.append('matricula', filtrosAtivos.matricula);
+            if (filtrosAtivos.carro) params.append('carro', filtrosAtivos.carro);
             if (filtrosAtivos.dataInicio) params.append('data_inicio', formatarDataParaAPI(filtrosAtivos.dataInicio));
             if (filtrosAtivos.dataFim) params.append('data_fim', formatarDataParaAPI(filtrosAtivos.dataFim));
             
@@ -429,7 +447,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (relatorios.length === 0) {
             tabela.innerHTML = `
                 <tr>
-                    <td colspan="6" class="text-center">
+                    <td colspan="7" class="text-center">
                         Nenhum relatório encontrado com os filtros atuais.
                     </td>
                 </tr>
@@ -442,7 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 if (relatorio.criado_em) {
                     const data = new Date(relatorio.criado_em);
-                    dataFormatada = data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR');
+                    dataFormatada = data.toLocaleDateString('pt-BR');
                 }
             } catch (e) {
                 console.error('Erro ao formatar data:', e);
@@ -480,22 +498,52 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
+            const numeroOS = relatorio.numero_os || 'N/A';
+            
+            // Extrair informações do motorista e veículo dos dados
+            let motorista = 'N/A';
+            let veiculo = 'N/A';
+            let motoes = 'N/A';
+            
+            if (relatorio.dados) {
+                try {
+                    // Se os dados são uma string, tentar extrair informações
+                    if (typeof relatorio.dados === 'string') {
+                        // Buscar por padrões comuns
+                        const motoristaMatch = relatorio.dados.match(/motorista[:\s]+([^\n\r,]+)/i);
+                        const veiculoMatch = relatorio.dados.match(/veículo[:\s]+([^\n\r,]+)/i) || 
+                                           relatorio.dados.match(/carro[:\s]+([^\n\r,]+)/i) ||
+                                           relatorio.dados.match(/placa[:\s]+([^\n\r,]+)/i);
+                        const motoesMatch = relatorio.dados.match(/motões[:\s]+([^\n\r,]+)/i) ||
+                                          relatorio.dados.match(/motao[:\s]+([^\n\r,]+)/i);
+                        
+                        if (motoristaMatch) motorista = motoristaMatch[1].trim();
+                        if (veiculoMatch) veiculo = veiculoMatch[1].trim();
+                        if (motoesMatch) motoes = motoesMatch[1].trim();
+                    }
+                    // Se os dados são um objeto, tentar acessar diretamente
+                    else if (typeof relatorio.dados === 'object') {
+                        motorista = relatorio.dados.motorista || relatorio.dados.motorista_matricula || 'N/A';
+                        veiculo = relatorio.dados.veiculo || relatorio.dados.carro || relatorio.dados.placa || 'N/A';
+                        motoes = relatorio.dados.motoes || relatorio.dados.motao || 'N/A';
+                    }
+                } catch (e) {
+                    console.log('Erro ao extrair dados do motorista/veículo:', e);
+                }
+            }
+            
             return `
                 <tr>
+                    <td><strong class="text-primary">${numeroOS}</strong></td>
                     <td>${dataFormatada}</td>
+                    <td>${motorista}</td>
+                    <td>${veiculo}</td>
                     <td>${tipoNome}</td>
-                    <td>${porteiroNome}</td>
                     <td>${statusBadge}</td>
-                    <td>${resumo.length > 50 ? resumo.substring(0, 50) + '...' : resumo}</td>
                     <td>
                         <button class="btn btn-sm btn-primary btn-ver" data-id="${relatorio.id}">
                             <i class="bi bi-eye"></i> Ver
                         </button>
-                        ${status === 'PENDENTE' ? `
-                        <button class="btn btn-sm btn-success btn-finalizar" data-id="${relatorio.id}">
-                            <i class="bi bi-check-circle"></i> Finalizar
-                        </button>
-                        ` : ''}
                     </td>
                 </tr>
             `;
@@ -503,10 +551,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         document.querySelectorAll('.btn-ver').forEach(btn => {
             btn.addEventListener('click', () => verRelatorioDetalhado(btn.dataset.id));
-        });
-        
-        document.querySelectorAll('.btn-finalizar').forEach(btn => {
-            btn.addEventListener('click', () => finalizarRelatorio(btn.dataset.id));
         });
     }
     
@@ -597,6 +641,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (filtrosAtivos.tipo) params.append('tipo', filtrosAtivos.tipo);
             if (filtrosAtivos.porteiro) params.append('porteiro', filtrosAtivos.porteiro);
             if (filtrosAtivos.status) params.append('status', filtrosAtivos.status);
+            if (filtrosAtivos.numeroOS) params.append('numero_os', filtrosAtivos.numeroOS);
+            if (filtrosAtivos.matricula) params.append('matricula', filtrosAtivos.matricula);
+            if (filtrosAtivos.carro) params.append('carro', filtrosAtivos.carro);
             if (filtrosAtivos.dataInicio) params.append('data_inicio', formatarDataParaAPI(filtrosAtivos.dataInicio));
             if (filtrosAtivos.dataFim) params.append('data_fim', formatarDataParaAPI(filtrosAtivos.dataFim));
             
@@ -674,7 +721,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const modalCorpo = document.getElementById('modalCorpo');
             const btnFinalizarParaDP = document.getElementById('btnFinalizarParaDP');
             
-            modalTitulo.textContent = `Relatório #${relatorio.id}`;
+            const numeroOS = relatorio.numero_os || 'N/A';
+            modalTitulo.textContent = `Relatório ${numeroOS}`;
             
             let dataFormatada = 'N/A';
             try {
@@ -760,21 +808,65 @@ document.addEventListener('DOMContentLoaded', function() {
                 btnFinalizarParaDP.style.display = 'none';
             }
 
+            // Extrair informações do motorista e veículo para o modal
+            let motoristaModal = 'N/A';
+            let veiculoModal = 'N/A';
+            let matriculaModal = 'N/A';
+            
+            if (relatorio.dados) {
+                try {
+                    if (typeof relatorio.dados === 'string') {
+                        const motoristaMatch = relatorio.dados.match(/motorista[:\s]+([^\n\r,]+)/i);
+                        const veiculoMatch = relatorio.dados.match(/veículo[:\s]+([^\n\r,]+)/i) || 
+                                           relatorio.dados.match(/carro[:\s]+([^\n\r,]+)/i) ||
+                                           relatorio.dados.match(/placa[:\s]+([^\n\r,]+)/i);
+                        const matriculaMatch = relatorio.dados.match(/matrícula[:\s]+([^\n\r,]+)/i) ||
+                                             relatorio.dados.match(/matricula[:\s]+([^\n\r,]+)/i) ||
+                                             relatorio.dados.match(/mat[:\s]+([^\n\r,]+)/i);
+                        
+                        if (motoristaMatch) motoristaModal = motoristaMatch[1].trim();
+                        if (veiculoMatch) veiculoModal = veiculoMatch[1].trim();
+                        if (matriculaMatch) matriculaModal = matriculaMatch[1].trim();
+                    } else if (typeof relatorio.dados === 'object') {
+                        motoristaModal = relatorio.dados.motorista || relatorio.dados.motorista_nome || 'N/A';
+                        veiculoModal = relatorio.dados.veiculo || relatorio.dados.carro || relatorio.dados.placa || 'N/A';
+                        matriculaModal = relatorio.dados.matricula || relatorio.dados.motorista_matricula || 'N/A';
+                    }
+                } catch (e) {
+                    console.log('Erro ao extrair dados para modal:', e);
+                }
+            }
+            
             modalCorpo.innerHTML = `
-                <div class="mb-3">
-                    <strong>Data:</strong> ${dataFormatada}
-                </div>
-                <div class="mb-3">
-                    <strong>Tipo:</strong> ${tipoNome}
-                </div>
-                <div class="mb-3">
-                    <strong>Porteiro:</strong> ${porteiroNome}
-                </div>
-                <div class="mb-3">
-                    <strong>Status:</strong> 
-                    <span class="badge ${relatorio.status === 'PENDENTE' ? 'bg-warning' : relatorio.status === 'EM_DP' ? 'bg-info' : relatorio.status === 'EM_TRAFEGO' ? 'bg-primary' : 'bg-success'}">
-                        ${relatorio.status || 'PENDENTE'}
-                    </span>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <strong>Data:</strong> ${dataFormatada}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Tipo:</strong> ${tipoNome}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Porteiro:</strong> ${porteiroNome}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Status:</strong> 
+                            <span class="badge ${relatorio.status === 'PENDENTE' ? 'bg-warning' : relatorio.status === 'EM_DP' ? 'bg-info' : relatorio.status === 'EM_TRAFEGO' ? 'bg-primary' : 'bg-success'}">
+                                ${relatorio.status || 'PENDENTE'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <strong>Motorista:</strong> <span class="badge bg-info">${motoristaModal}</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Veículo:</strong> <span class="badge bg-secondary">${veiculoModal}</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Matrícula:</strong> <span class="badge bg-warning">${matriculaModal}</span>
+                        </div>
+                    </div>
                 </div>
                 ${fotosHTML}
                 <div class="mb-3">
@@ -888,35 +980,32 @@ document.addEventListener('DOMContentLoaded', function() {
             if (filtrosAtivos.tipo) params.append('tipo', filtrosAtivos.tipo);
             if (filtrosAtivos.porteiro) params.append('porteiro', filtrosAtivos.porteiro);
             if (filtrosAtivos.status) params.append('status', filtrosAtivos.status);
+            if (filtrosAtivos.numeroOS) params.append('numero_os', filtrosAtivos.numeroOS);
+            if (filtrosAtivos.matricula) params.append('matricula', filtrosAtivos.matricula);
+            if (filtrosAtivos.carro) params.append('carro', filtrosAtivos.carro);
             if (filtrosAtivos.dataInicio) params.append('data_inicio', formatarDataParaAPI(filtrosAtivos.dataInicio));
             if (filtrosAtivos.dataFim) params.append('data_fim', formatarDataParaAPI(filtrosAtivos.dataFim));
             
             const response = await fetch(`/api/exportar/html?${params}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             
-            const htmlContent = await response.text();
-            const blob = new Blob([htmlContent], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = `relatorios_${new Date().toISOString().split('T')[0]}.html`;
             document.body.appendChild(a);
             a.click();
+            window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
-            URL.revokeObjectURL(url);
             
-            mostrarAlerta('Exportação HTML concluída com sucesso', 'success');
+            mostrarAlerta('Relatórios exportados com sucesso!', 'success');
         } catch (error) {
             console.error('Erro ao exportar relatórios:', error);
             mostrarAlerta('Erro ao exportar relatórios', 'danger');
         }
     }
     
-    // Função para exportar para PDF
-    async function exportarParaPDF() {
-        mostrarAlerta('Funcionalidade de PDF em desenvolvimento', 'info');
-    }
-
-    // Inicializar a aplicação
+    // Inicializar aplicação quando o DOM estiver carregado
     init();
 });

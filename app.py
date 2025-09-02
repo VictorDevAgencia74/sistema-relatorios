@@ -212,6 +212,9 @@ def get_relatorios():
         status = request.args.get('status')
         data_inicio = request.args.get('data_inicio')
         data_fim = request.args.get('data_fim')
+        numero_os = request.args.get('numero_os')  # Novo filtro por número de OS
+        matricula = request.args.get('matricula')  # Novo filtro por matrícula
+        carro = request.args.get('carro')  # Novo filtro por carro/veículo
         page = int(request.args.get('page', 1))
         per_page = int(request.args.get('per_page', 10))
 
@@ -239,6 +242,13 @@ def get_relatorios():
                 return jsonify(
                     {'success': False, 'message': 'Formato de data inválido'}
                 ), 400
+        
+        # Filtro por número de OS
+        if numero_os:
+            query = query.eq('numero_os', numero_os)
+        
+        # Nota: Filtros de matrícula e carro serão aplicados após a query
+        # devido a limitações do Supabase com campos JSONB
 
         # Executar query
         logger.info("Executando query no Supabase...")
@@ -286,6 +296,24 @@ def get_relatorios():
             
             relatorios_enriquecidos.append(relatorio_data)
 
+        # Aplicar filtros de matrícula e carro (filtragem no Python)
+        if matricula or carro:
+            relatorios_filtrados = []
+            for relatorio in relatorios_enriquecidos:
+                dados_texto = str(relatorio.get('dados', '')).lower()
+                
+                # Verificar filtro de matrícula
+                if matricula and matricula.lower() not in dados_texto:
+                    continue
+                
+                # Verificar filtro de carro
+                if carro and carro.lower() not in dados_texto:
+                    continue
+                
+                relatorios_filtrados.append(relatorio)
+            
+            relatorios_enriquecidos = relatorios_filtrados
+
         # Paginação manual
         total_count = len(relatorios_enriquecidos)
         start = (page - 1) * per_page
@@ -304,6 +332,55 @@ def get_relatorios():
         logger.error(traceback.format_exc())
         return jsonify(
             {'success': False, 'message': f'Erro ao buscar relatórios: {str(e)}'}
+        ), 500
+
+@app.route('/api/relatorios/numero/<numero_os>')
+def get_relatorio_por_numero(numero_os):
+    """Busca relatório por número de OS"""
+    try:
+        response = supabase.table('relatorios').select('*').eq('numero_os', numero_os).execute()
+
+        if response.data:
+            relatorio = response.data[0]
+            
+            # Enriquecer dados
+            if relatorio.get('porteiro_id'):
+                try:
+                    porteiro_response = supabase.table('porteiros').select(
+                        'nome').eq('id', relatorio['porteiro_id']).execute()
+                    if porteiro_response.data:
+                        relatorio['porteiro_nome'] = (
+                            porteiro_response.data[0]['nome']
+                        )
+                    else:
+                        relatorio['porteiro_nome'] = 'N/A'
+                except Exception as e:
+                    error_msg = f"Erro ao buscar porteiro {relatorio['porteiro_id']}: {e}"
+                    logger.error(error_msg)
+                    relatorio['porteiro_nome'] = 'Erro'
+
+            if relatorio.get('tipo_id'):
+                try:
+                    tipo_response = supabase.table('tipos_relatorio').select(
+                        'nome').eq('id', relatorio['tipo_id']).execute()
+                    if tipo_response.data:
+                        relatorio['tipo_nome'] = tipo_response.data[0]['nome']
+                    else:
+                        relatorio['tipo_nome'] = 'N/A'
+                except Exception as e:
+                    error_msg = f"Erro ao buscar tipo {relatorio['tipo_id']}: {e}"
+                    logger.error(error_msg)
+                    relatorio['tipo_nome'] = 'Erro'
+            
+            return jsonify(relatorio)
+        else:
+            return jsonify({'error': 'Relatório não encontrado'}), 404
+            
+    except Exception as e:
+        logger.error(f"Erro ao buscar relatório por número {numero_os}: {e}")
+        logger.error(traceback.format_exc())
+        return jsonify(
+            {'success': False, 'message': 'Erro ao buscar relatório'}
         ), 500
 
 @app.route('/api/relatorios/<id>')
@@ -550,6 +627,9 @@ def get_estatisticas():
         status = request.args.get('status')
         data_inicio = request.args.get('data_inicio')
         data_fim = request.args.get('data_fim')
+        numero_os = request.args.get('numero_os')  # Novo filtro por número de OS
+        matricula = request.args.get('matricula')  # Novo filtro por matrícula
+        carro = request.args.get('carro')  # Novo filtro por carro/veículo
 
         query = supabase.table('relatorios').select('*', count='exact')
 
@@ -572,6 +652,13 @@ def get_estatisticas():
                 return jsonify(
                     {'success': False, 'message': 'Formato de data inválido'}
                 ), 400
+        
+        # Filtro por número de OS
+        if numero_os:
+            query = query.eq('numero_os', numero_os)
+        
+        # Nota: Filtros de matrícula e carro serão aplicados após a query
+        # devido a limitações do Supabase com campos JSONB
 
         response = query.execute()
         total = response.count or 0
@@ -596,6 +683,13 @@ def get_estatisticas():
                 return jsonify(
                     {'success': False, 'message': 'Formato de data inválido'}
                 ), 400
+        
+        # Filtro por número de OS
+        if numero_os:
+            status_query = status_query.eq('numero_os', numero_os)
+        
+        # Nota: Filtros de matrícula e carro serão aplicados após a query
+        # devido a limitações do Supabase com campos JSONB
 
         status_response = status_query.execute()
 
@@ -605,7 +699,23 @@ def get_estatisticas():
             'EM_TRAFEGO': 0,
             'COBRADO': 0
         }
+        
+        # Aplicar filtros de matrícula e carro (filtragem no Python)
+        relatorios_filtrados = []
         for relatorio in status_response.data:
+            dados_texto = str(relatorio.get('dados', '')).lower()
+            
+            # Verificar filtro de matrícula
+            if matricula and matricula.lower() not in dados_texto:
+                continue
+            
+            # Verificar filtro de carro
+            if carro and carro.lower() not in dados_texto:
+                continue
+            
+            relatorios_filtrados.append(relatorio)
+        
+        for relatorio in relatorios_filtrados:
             status = relatorio.get('status', 'PENDENTE')
             estatisticas_status[status] = (
                 estatisticas_status.get(status, 0) + 1
@@ -631,6 +741,9 @@ def exportar_html():
         status = request.args.get('status')
         data_inicio = request.args.get('data_inicio')
         data_fim = request.args.get('data_fim')
+        numero_os = request.args.get('numero_os')  # Novo filtro por número de OS
+        matricula = request.args.get('matricula')  # Novo filtro por matrícula
+        carro = request.args.get('carro')  # Novo filtro por carro/veículo
 
         query = supabase.table('relatorios').select('*')
 
@@ -653,6 +766,13 @@ def exportar_html():
                 return jsonify(
                     {'success': False, 'message': 'Formato de data inválido'}
                 ), 400
+        
+        # Filtro por número de OS
+        if numero_os:
+            query = query.eq('numero_os', numero_os)
+        
+        # Nota: Filtros de matrícula e carro serão aplicados após a query
+        # devido a limitações do Supabase com campos JSONB
 
         query = query.order('criado_em', desc=True)
         response = query.execute()
@@ -681,6 +801,24 @@ def exportar_html():
                     relatorio_data['tipo_nome'] = 'N/A'
             
             relatorios_enriquecidos.append(relatorio_data)
+
+        # Aplicar filtros de matrícula e carro (filtragem no Python)
+        if matricula or carro:
+            relatorios_filtrados = []
+            for relatorio in relatorios_enriquecidos:
+                dados_texto = str(relatorio.get('dados', '')).lower()
+                
+                # Verificar filtro de matrícula
+                if matricula and matricula.lower() not in dados_texto:
+                    continue
+                
+                # Verificar filtro de carro
+                if carro and carro.lower() not in dados_texto:
+                    continue
+                
+                relatorios_filtrados.append(relatorio)
+            
+            relatorios_enriquecidos = relatorios_filtrados
 
         # Gerar HTML
         html_content = render_template(
