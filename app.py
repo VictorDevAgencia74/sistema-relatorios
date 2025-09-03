@@ -49,8 +49,7 @@ def setup_storage():
         if 'relatorios-fotos' not in bucket_names:
             # Criar bucket se não existir
             create_response = supabase.storage.create_bucket(
-                'relatorios-fotos', 
-                public=True
+                'relatorios-fotos'
             )
             logger.info("Bucket 'relatorios-fotos' criado com sucesso")
         else:
@@ -61,7 +60,7 @@ def setup_storage():
         print(f"Erro detalhado no storage: {traceback.format_exc()}")
 
 # Executar configuração do storage
-setup_storage()
+# setup_storage()  # Comentado temporariamente devido a problemas de autenticação
 
 # Middleware para logging de requests
 @app.before_request
@@ -562,32 +561,28 @@ def criar_relatorio():
         logger.error(traceback.format_exc())
         return jsonify({
             'success': False,
-            'message': 'Erro interno ao criar relatório'
-        }), 500
-            
-    except Exception as e:
-        logger.error(f"Erro ao criar relatório: {e}")
-        logger.error(traceback.format_exc())
-        return jsonify({
-            'success': False,
-            'message': 'Erro interno ao criar relatório'
+            'message': f'Erro interno ao criar relatório: {str(e)}'
         }), 500
 
 @app.route('/api/relatorios/<id>/status', methods=['PUT'])
 def atualizar_status(id):
     try:
         data = request.json
+        logger.info(f"Atualizando status do relatório {id} com dados: {data}")
+        
         if not data or 'status' not in data:
+            logger.error(f"Status não fornecido para relatório {id}")
             return jsonify(
                 {'success': False, 'message': 'Status não fornecido'}
             ), 400
 
         novo_status = data.get('status')
+        logger.info(f"Novo status: {novo_status}")
 
         # Validar status
-        if novo_status not in ['PENDENTE', 'EM_DP', 'EM_TRAFEGO', 'COBRADO']:
+        if novo_status not in ['PENDENTE', 'EM_DP', 'EM_TRAFEGO', 'COBRADO', 'FINALIZADA']:
             return jsonify(
-                {'success': False, 'message': 'Status inválido'}
+                {'success': False, 'message': f'Status inválido: {novo_status}. Status válidos: PENDENTE, EM_DP, EM_TRAFEGO, COBRADO, FINALIZADA'}
             ), 400
 
         # Adicionar dados adicionais se necessário
@@ -598,16 +593,29 @@ def atualizar_status(id):
         if 'motorista' in data:
             update_data['motorista'] = data['motorista']
         if 'documentos' in data:
-            update_data['documentos'] = data['documentos']
+            # Converter array de documentos para objeto se necessário
+            documentos = data['documentos']
+            if isinstance(documentos, list):
+                # Converter array para objeto com chaves numeradas
+                documentos_obj = {}
+                for i, doc in enumerate(documentos):
+                    documentos_obj[f'doc_{i+1}'] = doc
+                update_data['documentos'] = documentos_obj
+            else:
+                update_data['documentos'] = documentos
 
+        logger.info(f"Executando update no Supabase com dados: {update_data}")
         response = supabase.table('relatorios').update(
             update_data).eq('id', id).execute()
 
+        logger.info(f"Resposta do Supabase: {response}")
+        
         if response.data:
             log_msg = f"Status do relatório {id} atualizado para {novo_status}"
             logger.info(log_msg)
             return jsonify({'success': True})
         else:
+            logger.error(f"Relatório {id} não encontrado para atualização")
             return jsonify(
                 {'success': False, 'message': 'Relatório não encontrado'}
             ), 404

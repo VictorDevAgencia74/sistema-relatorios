@@ -13,8 +13,32 @@
     border-bottom: 3px solid #0d6efd;
 }
 .action-btn {
-    width: 100%;
-    margin-bottom: 0.5rem;
+    width: 100% !important;
+    margin-bottom: 0.25rem !important;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    display: block !important;
+    float: none !important;
+    clear: both !important;
+}
+
+.action-btn:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Forçar layout vertical na coluna de ações */
+.dp-table .table td:nth-child(6) {
+    vertical-align: top !important;
+}
+
+.dp-table .table td:nth-child(6) .d-flex {
+    gap: 0.25rem;
+}
+
+.dp-table .table td:nth-child(6) .action-btn {
+    width: 100% !important;
+    margin-bottom: 0 !important;
+    flex: 1;
 }
 .upload-area {
     border: 2px dashed #ccc;
@@ -37,6 +61,520 @@
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+
+/* ========== MODERN DP STYLES ========== */
+
+/* Header Moderno */
+.modern-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.modern-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    pointer-events: none;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.header-title h2 {
+    color: white;
+    font-weight: 700;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.header-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Botão de Atualizar Moderno */
+.btn-refresh {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.btn-refresh:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Loading State */
+.loading-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+}
+
+.loading-spinner {
+    text-align: center;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Cards Modernos */
+.modern-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    height: 100%;
+}
+
+.modern-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+.modern-card .card-header {
+    background: linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%);
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.os-number {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    color: #2d3748;
+    font-size: 1.1rem;
+}
+
+.os-number i {
+    color: #667eea;
+    font-size: 1.2rem;
+}
+
+/* Status Badges */
+.status-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-analyzing {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+}
+
+.status-traffic {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.status-completed {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.status-pending {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    color: white;
+}
+
+/* Card Body */
+.modern-card .card-body {
+    padding: 1.5rem;
+}
+
+.info-row {
+    margin-bottom: 1rem;
+}
+
+.info-row:last-child {
+    margin-bottom: 0;
+}
+
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.info-item i {
+    color: #667eea;
+    font-size: 1.1rem;
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+}
+
+.info-item div {
+    flex: 1;
+}
+
+.info-item label {
+    display: block;
+    font-size: 0.8rem;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.info-item span {
+    display: block;
+    color: #2d3748;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+/* Card Footer */
+.modern-card .card-footer {
+    padding: 1.5rem;
+    background: #f8f9ff;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* Botões Modernos */
+.btn-modern {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-process {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.btn-process:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+}
+
+.btn-view {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+}
+
+.btn-view:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+}
+
+/* Estados Vazios e de Erro */
+.empty-state, .error-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.empty-state i, .error-state i {
+    font-size: 4rem;
+    color: #cbd5e0;
+    margin-bottom: 1rem;
+}
+
+.error-state i {
+    color: #f56565;
+}
+
+.empty-state h4, .error-state h4 {
+    color: #2d3748;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p, .error-state p {
+    color: #6b7280;
+    margin-bottom: 2rem;
+}
+
+/* Responsividade Moderna */
+@media (max-width: 1200px) {
+    .modern-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        gap: 1.5rem;
+        text-align: center;
+    }
+    
+    .header-title h2 {
+        font-size: 1.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .modern-header {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .header-title h2 {
+        font-size: 1.5rem;
+    }
+    
+    .header-subtitle {
+        font-size: 1rem;
+    }
+    
+    .modern-card .card-header {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .modern-card .card-body {
+        padding: 1rem;
+    }
+    
+    .modern-card .card-footer {
+        padding: 1rem;
+        flex-direction: column;
+    }
+    
+    .btn-modern {
+        width: 100%;
+    }
+    
+    .info-item {
+        gap: 0.75rem;
+    }
+    
+    .info-item i {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .modern-header {
+        padding: 1rem;
+        border-radius: 15px;
+    }
+    
+    .header-title h2 {
+        font-size: 1.25rem;
+    }
+    
+    .header-subtitle {
+        font-size: 0.9rem;
+    }
+    
+    .btn-refresh {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .modern-card {
+        border-radius: 15px;
+    }
+    
+    .modern-card .card-header {
+        padding: 0.75rem;
+    }
+    
+    .modern-card .card-body {
+        padding: 0.75rem;
+    }
+    
+    .modern-card .card-footer {
+        padding: 0.75rem;
+    }
+    
+    .os-number {
+        font-size: 1rem;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+    }
+}
+
+/* ========== DP TABLE STYLES (LEGACY) ========== */
+/* Estilos específicos para a tabela do Departamento Pessoal */
+.dp-table .table {
+    min-width: 900px; /* Largura mínima para DP */
+}
+
+/* Coluna Número OS - DP */
+.dp-table .table th:nth-child(1), .dp-table .table td:nth-child(1) {
+    width: 140px;
+    min-width: 140px;
+    max-width: 140px;
+    white-space: nowrap;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* Coluna Data - DP */
+.dp-table .table th:nth-child(2), .dp-table .table td:nth-child(2) {
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+/* Coluna Motorista - DP */
+.dp-table .table th:nth-child(3), .dp-table .table td:nth-child(3) {
+    min-width: 150px;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Coluna Tipo de Ocorrência - DP */
+.dp-table .table th:nth-child(4), .dp-table .table td:nth-child(4) {
+    min-width: 150px;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Coluna Status - DP */
+.dp-table .table th:nth-child(5), .dp-table .table td:nth-child(5) {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* Coluna Ações - DP */
+.dp-table .table th:nth-child(6), .dp-table .table td:nth-child(6) {
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* Responsividade para DP */
+@media (max-width: 1200px) {
+    .dp-table .table th:nth-child(3), .dp-table .table td:nth-child(3) { /* Motorista */
+        max-width: 150px;
+    }
+    
+    .dp-table .table th:nth-child(4), .dp-table .table td:nth-child(4) { /* Tipo */
+        max-width: 150px;
+    }
+}
+
+@media (max-width: 992px) {
+    .dp-table .table th:nth-child(3), .dp-table .table td:nth-child(3) { /* Motorista */
+        max-width: 120px;
+    }
+    
+    .dp-table .table th:nth-child(4), .dp-table .table td:nth-child(4) { /* Tipo */
+        max-width: 120px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dp-table .table {
+        min-width: 800px;
+    }
+    
+    .dp-table .table th, .dp-table .table td {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.85rem;
+    }
+    
+    .dp-table .table th:nth-child(1), .dp-table .table td:nth-child(1) { /* Número OS */
+        width: 100px;
+        min-width: 100px;
+        max-width: 100px;
+    }
+    
+    .dp-table .table th:nth-child(2), .dp-table .table td:nth-child(2) { /* Data */
+        width: 100px;
+        min-width: 100px;
+        max-width: 100px;
+    }
+    
+    .dp-table .table th:nth-child(5), .dp-table .table td:nth-child(5) { /* Status */
+        width: 80px;
+        min-width: 80px;
+        max-width: 80px;
+    }
+    
+    .dp-table .table th:nth-child(6), .dp-table .table td:nth-child(6) { /* Ações */
+        width: 110px;
+        min-width: 110px;
+        max-width: 110px;
+    }
 }
 
 /* ========== ADMIN TABLE STYLES ========== */
@@ -416,4 +954,54 @@
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
     border-radius: 0.25rem;
+}
+
+/* ===== ESTILOS ESPECÍFICOS PARA TRÁFEGO ===== */
+.trafego-header {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    position: relative;
+    overflow: hidden;
+}
+
+.trafego-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="truck" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M2 8h12v4H2zM6 4h4v4H6z" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23truck)"/></svg>');
+    opacity: 0.3;
+}
+
+.trafego-card {
+    border-left: 4px solid #0ea5e9;
+}
+
+.trafego-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(14, 165, 233, 0.2);
+}
+
+.status-traffic {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    color: white;
+}
+
+.btn-cobrado {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+}
+
+.btn-cobrado:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.valor-destaque {
+    font-weight: 700;
+    color: #059669;
+    font-size: 1.1rem;
 }

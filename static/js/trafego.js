@@ -44,16 +44,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Carregar ocorrências para o Tráfego
     async function carregarOcorrenciasTrafego() {
-        const tabela = document.getElementById('tabelaTrafego');
-        tabela.innerHTML = `
-            <tr>
-                <td colspan="8" class="text-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Carregando...</span>
-                    </div>
-                </td>
-            </tr>
-        `;
+        const container = document.getElementById('ocorrenciasContainer');
+        const loadingState = document.getElementById('loadingState');
+        
+        // Verificar se os elementos existem
+        if (!container) {
+            console.error('Elemento ocorrenciasContainer não encontrado');
+            return;
+        }
+        
+        if (!loadingState) {
+            console.error('Elemento loadingState não encontrado');
+            return;
+        }
+        
+        // Mostrar loading
+        loadingState.style.display = 'block';
+        container.innerHTML = '';
         
         try {
             const response = await fetch('/api/relatorios?status=EM_TRAFEGO');
@@ -61,35 +68,50 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const data = await response.json();
             ocorrencias = data.data || [];
+            
+            // Esconder loading
+            if (loadingState) {
+                loadingState.style.display = 'none';
+            }
             renderizarOcorrenciasTrafego();
         } catch (error) {
             console.error('Erro ao carregar ocorrências:', error);
-            tabela.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center text-danger">
-                        Erro ao carregar ocorrências. Tente novamente.
-                    </td>
-                </tr>
+            if (loadingState) {
+                loadingState.style.display = 'none';
+            }
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="error-state">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <h4>Erro ao carregar ocorrências</h4>
+                        <p>Tente novamente em alguns instantes.</p>
+                        <button class="btn btn-modern btn-primary" onclick="carregarOcorrenciasTrafego()">
+                            <i class="bi bi-arrow-clockwise"></i> Tentar Novamente
+                        </button>
+                    </div>
+                </div>
             `;
         }
     }
     
-    // Renderizar ocorrências na tabela
+    // Renderizar ocorrências em cards modernos
     function renderizarOcorrenciasTrafego() {
-        const tabela = document.getElementById('tabelaTrafego');
+        const container = document.getElementById('ocorrenciasContainer');
         
         if (ocorrencias.length === 0) {
-            tabela.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center">
-                        Nenhuma ocorrência para cobrança.
-                    </td>
-                </tr>
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h4>Nenhuma ocorrência encontrada</h4>
+                        <p>Não há ocorrências para cobrança no momento.</p>
+                    </div>
+                </div>
             `;
             return;
         }
 
-        tabela.innerHTML = ocorrencias.map(ocorrencia => {
+        container.innerHTML = ocorrencias.map(ocorrencia => {
             let dataFormatada = 'N/A';
             try {
                 if (ocorrencia.criado_em) {
@@ -102,26 +124,107 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const tipoNome = ocorrencia.tipos_relatorio?.nome || ocorrencia.tipo_nome || ocorrencia.tipo_id || 'N/A';
             const porteiroNome = ocorrencia.porteiros?.nome || ocorrencia.porteiro_nome || ocorrencia.porteiro_id || 'N/A';
-            const motorista = ocorrencia.motorista || 'N/A';
-            const valor = ocorrencia.valor ? `R$ ${ocorrencia.valor.toFixed(2)}` : 'R$ 0,00';
             
+            // Extrair nome do motorista
+            let motoristaNome = 'N/A';
+            if (ocorrencia.motorista) {
+                motoristaNome = ocorrencia.motorista;
+            } else if (ocorrencia.dados) {
+                try {
+                    if (typeof ocorrencia.dados === 'string') {
+                        const motoristaMatch = ocorrencia.dados.match(/motorista[:\s]+([^\n\r,]+)/i);
+                        if (motoristaMatch) {
+                            motoristaNome = motoristaMatch[1].trim();
+                        }
+                    } else if (typeof ocorrencia.dados === 'object') {
+                        motoristaNome = ocorrencia.dados.motorista || ocorrencia.dados.motorista_matricula || 'N/A';
+                    }
+                } catch (e) {
+                    console.log('Erro ao extrair dados do motorista:', e);
+                }
+            }
+            
+            const valor = ocorrencia.valor ? `R$ ${ocorrencia.valor.toFixed(2)}` : 'R$ 0,00';
             const numeroOS = ocorrencia.numero_os || 'N/A';
             
             return `
-                <tr>
-                    <td><strong class="text-primary">${numeroOS}</strong></td>
-                    <td>${dataFormatada}</td>
-                    <td>${porteiroNome}</td>
-                    <td>${motorista}</td>
-                    <td>${tipoNome}</td>
-                    <td>${valor}</td>
-                    <td><span class="badge bg-primary status-badge">Para cobrança</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-info action-btn" onclick="abrirModalVisualizarTrafego('${ocorrencia.id}')">
-                            <i class="bi bi-eye"></i> Visualizar
-                        </button>
-                    </td>
-                </tr>
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="modern-card trafego-card" data-id="${ocorrencia.id}">
+                        <div class="card-header">
+                            <div class="os-number">
+                                <i class="bi bi-file-text"></i>
+                                <span>${numeroOS}</span>
+                            </div>
+                            <div class="status-badge status-traffic">
+                                <i class="bi bi-truck"></i>
+                                <span>Para Cobrança</span>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <i class="bi bi-calendar3"></i>
+                                    <div>
+                                        <label>Data</label>
+                                        <span>${dataFormatada}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <i class="bi bi-person-badge"></i>
+                                    <div>
+                                        <label>Porteiro</label>
+                                        <span>${porteiroNome}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <i class="bi bi-person"></i>
+                                    <div>
+                                        <label>Motorista</label>
+                                        <span>${motoristaNome}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <i class="bi bi-tag"></i>
+                                    <div>
+                                        <label>Tipo de Ocorrência</label>
+                                        <span>${tipoNome}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <i class="bi bi-currency-dollar"></i>
+                                    <div>
+                                        <label>Valor</label>
+                                        <span class="valor-destaque">${valor}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer">
+                            <button class="btn btn-modern btn-view" onclick="abrirModalVisualizarTrafego('${ocorrencia.id}')">
+                                <i class="bi bi-eye"></i>
+                                <span>Visualizar</span>
+                            </button>
+                            <button class="btn btn-modern btn-cobrado" onclick="marcarComoCobrado('${ocorrencia.id}')">
+                                <i class="bi bi-check-circle"></i>
+                                <span>Marcar Cobrado</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             `;
         }).join('');
     }
@@ -165,30 +268,42 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Marcar como cobrado (Tráfego)
-    async function marcarComoCobrado() {
-        if (!ocorrenciaSelecionada) return;
+    async function marcarComoCobrado(id) {
+        const ocorrencia = ocorrencias.find(oc => oc.id === id);
+        if (!ocorrencia) return;
+        
+        if (!confirm('Tem certeza que deseja marcar esta cobrança como realizada?')) {
+            return;
+        }
         
         try {
-            const response = await fetch(`/api/relatorios/${ocorrenciaSelecionada.id}/status`, {
+            const requestData = {
+                status: 'COBRADO'
+            };
+            
+            console.log('Enviando dados:', requestData);
+            
+            const response = await fetch(`/api/relatorios/${id}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    status: 'COBRADO'
-                })
+                body: JSON.stringify(requestData)
             });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             const data = await response.json();
             
             if (data.success) {
-                // Fechar modal e atualizar tabela
-                bootstrap.Modal.getInstance(document.getElementById('modalVisualizarTrafego')).hide();
-                await carregarOcorrenciasTrafego();
-                
                 alert('Cobrança marcada como realizada com sucesso!');
+                
+                // Recarregar a página para mostrar as mudanças
+                window.location.reload();
             } else {
-                alert('Erro ao marcar como cobrado: ' + data.message);
+                alert('Erro ao marcar como cobrado: ' + (data.message || 'Erro desconhecido'));
             }
         } catch (error) {
             console.error('Erro ao marcar como cobrado:', error);
@@ -201,4 +316,5 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Torna as funções globais para acesso pelo HTML
     window.abrirModalVisualizarTrafego = abrirModalVisualizarTrafego;
+    window.marcarComoCobrado = marcarComoCobrado;
 });

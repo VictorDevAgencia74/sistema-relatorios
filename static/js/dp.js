@@ -45,16 +45,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Carregar ocorrências para o Departamento Pessoal
     async function carregarOcorrenciasDP() {
-        const tabela = document.getElementById('tabelaDP');
-        tabela.innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Carregando...</span>
-                    </div>
-                </td>
-            </tr>
-        `;
+        const container = document.getElementById('ocorrenciasContainer');
+        const loadingState = document.getElementById('loadingState');
+        
+        // Verificar se os elementos existem
+        if (!container) {
+            console.error('Elemento ocorrenciasContainer não encontrado');
+            return;
+        }
+        
+        if (!loadingState) {
+            console.error('Elemento loadingState não encontrado');
+            return;
+        }
+        
+        // Mostrar loading
+        loadingState.style.display = 'block';
+        container.innerHTML = '';
         
         try {
             const response = await fetch('/api/relatorios?status=EM_DP');
@@ -62,35 +69,57 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const data = await response.json();
             ocorrencias = data.data || [];
+            
+            // Debug: verificar estrutura dos dados
+            if (ocorrencias.length > 0) {
+                console.log('Primeira ocorrência:', ocorrencias[0]);
+                console.log('Campo motorista:', ocorrencias[0].motorista);
+                console.log('Campo dados:', ocorrencias[0].dados);
+            }
+            
+            // Esconder loading
+            if (loadingState) {
+                loadingState.style.display = 'none';
+            }
             renderizarOcorrenciasDP();
         } catch (error) {
             console.error('Erro ao carregar ocorrências:', error);
-            tabela.innerHTML = `
-                <tr>
-                    <td colspan="7" class="text-center text-danger">
-                        Erro ao carregar ocorrências. Tente novamente.
-                    </td>
-                </tr>
+            if (loadingState) {
+                loadingState.style.display = 'none';
+            }
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="error-state">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <h4>Erro ao carregar ocorrências</h4>
+                        <p>Tente novamente em alguns instantes.</p>
+                        <button class="btn btn-modern btn-primary" onclick="carregarOcorrenciasDP()">
+                            <i class="bi bi-arrow-clockwise"></i> Tentar Novamente
+                        </button>
+                    </div>
+                </div>
             `;
         }
     }
     
-    // Renderizar ocorrências na tabela
+    // Renderizar ocorrências em cards modernos
     function renderizarOcorrenciasDP() {
-        const tabela = document.getElementById('tabelaDP');
+        const container = document.getElementById('ocorrenciasContainer');
         
         if (ocorrencias.length === 0) {
-            tabela.innerHTML = `
-                <tr>
-                    <td colspan="7" class="text-center">
-                        Nenhuma ocorrência para processar.
-                    </td>
-                </tr>
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h4>Nenhuma ocorrência encontrada</h4>
+                        <p>Não há ocorrências para processar no momento.</p>
+                    </div>
+                </div>
             `;
             return;
         }
 
-        tabela.innerHTML = ocorrencias.map(ocorrencia => {
+        container.innerHTML = ocorrencias.map(ocorrencia => {
             let dataFormatada = 'N/A';
             try {
                 if (ocorrencia.criado_em) {
@@ -102,27 +131,118 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const tipoNome = ocorrencia.tipos_relatorio?.nome || ocorrencia.tipo_nome || ocorrencia.tipo_id || 'N/A';
-            const porteiroNome = ocorrencia.porteiros?.nome || ocorrencia.porteiro_nome || ocorrencia.porteiro_id || 'N/A';
             
+            // Extrair nome do motorista do campo dados ou do campo motorista
+            let motoristaNome = 'N/A';
+            
+            // Primeiro, tentar o campo motorista direto
+            if (ocorrencia.motorista) {
+                motoristaNome = ocorrencia.motorista;
+            }
+            // Se não houver, tentar extrair do campo dados
+            else if (ocorrencia.dados) {
+                try {
+                    // Se os dados são uma string, tentar extrair informações
+                    if (typeof ocorrencia.dados === 'string') {
+                        const motoristaMatch = ocorrencia.dados.match(/motorista[:\s]+([^\n\r,]+)/i);
+                        if (motoristaMatch) {
+                            motoristaNome = motoristaMatch[1].trim();
+                        }
+                    }
+                    // Se os dados são um objeto, tentar acessar diretamente
+                    else if (typeof ocorrencia.dados === 'object') {
+                        motoristaNome = ocorrencia.dados.motorista || ocorrencia.dados.motorista_matricula || 'N/A';
+                    }
+                } catch (e) {
+                    console.log('Erro ao extrair dados do motorista:', e);
+                }
+            }
             const numeroOS = ocorrencia.numero_os || 'N/A';
             
+            // Determinar status e cor
+            let statusClass = '';
+            let statusText = '';
+            let statusIcon = '';
+            switch(ocorrencia.status) {
+                case 'EM_DP':
+                    statusClass = 'status-analyzing';
+                    statusText = 'Em Análise';
+                    statusIcon = 'bi-search';
+                    break;
+                case 'EM_TRAFEGO':
+                    statusClass = 'status-traffic';
+                    statusText = 'Em Tráfego';
+                    statusIcon = 'bi-truck';
+                    break;
+                case 'CONCLUIDO':
+                    statusClass = 'status-completed';
+                    statusText = 'Concluído';
+                    statusIcon = 'bi-check-circle';
+                    break;
+                default:
+                    statusClass = 'status-pending';
+                    statusText = 'Pendente';
+                    statusIcon = 'bi-clock';
+            }
+            
             return `
-                <tr>
-                    <td><strong class="text-primary">${numeroOS}</strong></td>
-                    <td>${dataFormatada}</td>
-                    <td>${porteiroNome}</td>
-                    <td>${tipoNome}</td>
-                    <td>${ocorrencia.dados ? (typeof ocorrencia.dados === 'string' ? ocorrencia.dados.substring(0, 50) + (ocorrencia.dados.length > 50 ? '...' : '') : JSON.stringify(ocorrencia.dados).substring(0, 50) + '...') : 'Nenhum conteúdo'}</td>
-                    <td><span class="badge bg-info status-badge">Em análise</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-success action-btn" onclick="abrirModalProcessarDP('${ocorrencia.id}')">
-                            <i class="bi bi-cash-coin"></i> Processar
-                        </button>
-                        <button class="btn btn-sm btn-info action-btn" onclick="visualizarOcorrencia('${ocorrencia.id}')">
-                            <i class="bi bi-eye"></i> Visualizar
-                        </button>
-                    </td>
-                </tr>
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="modern-card" data-id="${ocorrencia.id}">
+                        <div class="card-header">
+                            <div class="os-number">
+                                <i class="bi bi-file-text"></i>
+                                <span>${numeroOS}</span>
+                            </div>
+                            <div class="status-badge ${statusClass}">
+                                <i class="${statusIcon}"></i>
+                                <span>${statusText}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <i class="bi bi-calendar3"></i>
+                                    <div>
+                                        <label>Data</label>
+                                        <span>${dataFormatada}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <i class="bi bi-person"></i>
+                                    <div>
+                                        <label>Motorista</label>
+                                        <span>${motoristaNome}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <i class="bi bi-tag"></i>
+                                    <div>
+                                        <label>Tipo de Ocorrência</label>
+                                        <span>${tipoNome}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer">
+                            <button class="btn btn-modern btn-process" onclick="abrirModalProcessarDP('${ocorrencia.id}')">
+                                <i class="bi bi-cash-coin"></i>
+                                <span>Processar</span>
+                            </button>
+                            <button class="btn btn-modern btn-view" onclick="visualizarOcorrencia('${ocorrencia.id}')">
+                                <i class="bi bi-eye"></i>
+                                <span>Visualizar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             `;
         }).join('');
     }
@@ -207,29 +327,46 @@ document.addEventListener('DOMContentLoaded', function() {
             // Simular upload de documentos (em produção seria feito para o servidor)
             const documentosNomes = documentosDP.map(file => file.name);
             
+            // Validar e converter valor
+            const valorNumerico = parseFloat(valor);
+            if (isNaN(valorNumerico) || valorNumerico < 0) {
+                alert('Por favor, insira um valor válido.');
+                return;
+            }
+            
+            const requestData = {
+                status: 'EM_TRAFEGO',
+                valor: valorNumerico,
+                motorista: motorista.trim(),
+                documentos: documentosNomes
+            };
+            
+            console.log('Enviando dados:', requestData);
+            
             const response = await fetch(`/api/relatorios/${ocorrenciaSelecionada.id}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    status: 'EM_TRAFEGO',
-                    valor: parseFloat(valor),
-                    motorista: motorista,
-                    documentos: documentosNomes
-                })
+                body: JSON.stringify(requestData)
             });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             const data = await response.json();
             
             if (data.success) {
-                // Fechar modal e atualizar tabela
+                // Fechar modal
                 bootstrap.Modal.getInstance(document.getElementById('modalProcessarDP')).hide();
-                await carregarOcorrenciasDP();
                 
                 alert('Ocorrência processada e enviada para o Tráfego com sucesso!');
+                
+                // Recarregar a página para mostrar as mudanças
+                window.location.reload();
             } else {
-                alert('Erro ao processar ocorrência: ' + data.message);
+                alert('Erro ao processar ocorrência: ' + (data.message || 'Erro desconhecido'));
             }
         } catch (error) {
             console.error('Erro ao processar ocorrência:', error);
