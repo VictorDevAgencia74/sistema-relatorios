@@ -740,6 +740,26 @@ def get_estatisticas():
             {'success': False, 'message': 'Erro ao buscar estatísticas'}
         ), 500
 
+def extrair_motorista_dos_dados(dados):
+    """
+    Extrai o nome do motorista dos dados (JSONB ou string)
+    """
+    try:
+        if isinstance(dados, dict):
+            return (dados.get('motorista') or 
+                   dados.get('motorista_matricula') or 
+                   dados.get('nome_motorista') or 
+                   None)
+        elif isinstance(dados, str):
+            import re
+            match = re.search(r'motorista[:\s]+([^\n\r,]+)', dados, re.IGNORECASE)
+            if match:
+                return match.group(1).strip()
+        return None
+    except Exception as e:
+        logger.error(f"Erro ao extrair motorista dos dados: {e}")
+        return None
+
 @app.route('/api/exportar/html')
 def exportar_html():
     try:
@@ -808,6 +828,31 @@ def exportar_html():
                 else:
                     relatorio_data['tipo_nome'] = 'N/A'
             
+            # Extrair nome do motorista dos dados se não estiver no campo motorista
+            if not relatorio_data.get('motorista') and relatorio_data.get('dados'):
+                motorista_extraido = extrair_motorista_dos_dados(relatorio_data['dados'])
+                if motorista_extraido:
+                    relatorio_data['motorista'] = motorista_extraido
+            
+            # Formatar data para exibição
+            if relatorio_data.get('criado_em'):
+                try:
+                    if isinstance(relatorio_data['criado_em'], str):
+                        for fmt in ['%Y-%m-%dT%H:%M:%S.%f%z', '%Y-%m-%dT%H:%M:%S%z', '%Y-%m-%d %H:%M:%S']:
+                            try:
+                                dt = datetime.strptime(relatorio_data['criado_em'], fmt)
+                                relatorio_data['criado_em'] = dt.strftime('%d/%m/%Y %H:%M:%S')
+                                break
+                            except ValueError:
+                                continue
+                        else:
+                            relatorio_data['criado_em'] = relatorio_data['criado_em']
+                    else:
+                        relatorio_data['criado_em'] = relatorio_data['criado_em'].strftime('%d/%m/%Y %H:%M:%S')
+                except Exception as e:
+                    logger.error(f"Erro ao formatar data: {e}")
+                    relatorio_data['criado_em'] = 'Data inválida'
+            
             relatorios_enriquecidos.append(relatorio_data)
 
         # Aplicar filtros de matrícula e carro (filtragem no Python)
@@ -829,15 +874,19 @@ def exportar_html():
             relatorios_enriquecidos = relatorios_filtrados
 
         # Gerar HTML
+        logger.info(f"Gerando HTML para {len(relatorios_enriquecidos)} relatórios")
         html_content = render_template(
-            'export_template.html', relatorios=relatorios_enriquecidos
+            'export_template.html', 
+            relatorios=relatorios_enriquecidos,
+            data_exportacao=datetime.now().strftime('%d/%m/%Y %H:%M:%S')
         )
+        logger.info("HTML gerado com sucesso")
         return html_content
     except Exception as e:
         logger.error(f"Erro ao exportar relatórios: {e}")
         logger.error(traceback.format_exc())
         return jsonify(
-            {'success': False, 'message': 'Erro ao exportar relatórios'}
+            {'success': False, 'message': f'Erro ao exportar relatórios: {str(e)}'}
         ), 500
 
 # ==================== ROTAS DE BACKUP ====================

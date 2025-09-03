@@ -1006,6 +1006,44 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Função para exportar relatórios em PDF (usando HTML com estilos para impressão)
+    async function exportarParaPDF() {
+        try {
+            const params = new URLSearchParams();
+            if (filtrosAtivos.tipo) params.append('tipo', filtrosAtivos.tipo);
+            if (filtrosAtivos.porteiro) params.append('porteiro', filtrosAtivos.porteiro);
+            if (filtrosAtivos.status) params.append('status', filtrosAtivos.status);
+            if (filtrosAtivos.numeroOS) params.append('numero_os', filtrosAtivos.numeroOS);
+            if (filtrosAtivos.matricula) params.append('matricula', filtrosAtivos.matricula);
+            if (filtrosAtivos.carro) params.append('carro', filtrosAtivos.carro);
+            if (filtrosAtivos.dataInicio) params.append('data_inicio', formatarDataParaAPI(filtrosAtivos.dataInicio));
+            if (filtrosAtivos.dataFim) params.append('data_fim', formatarDataParaAPI(filtrosAtivos.dataFim));
+            
+            console.log('Fazendo requisição para:', `/api/exportar/html?${params}`);
+            
+            const response = await fetch(`/api/exportar/html?${params}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const htmlContent = await response.text();
+            console.log('HTML recebido com sucesso, tamanho:', htmlContent.length);
+            
+            // Abrir em nova aba e imprimir
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+            
+            // Aguardar um pouco e então imprimir
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+            
+            mostrarAlerta('Abrindo relatórios para impressão/PDF...', 'info');
+        } catch (error) {
+            console.error('Erro ao exportar para PDF:', error);
+            mostrarAlerta('Erro ao exportar para PDF: ' + error.message, 'danger');
+        }
+    }
+    
     // Inicializar aplicação quando o DOM estiver carregado
     init();
 });
