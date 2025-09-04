@@ -86,17 +86,20 @@
         
         .cards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
         }
         
         .ocorrencia-card {
             background: white;
-            border-radius: 12px;
+            border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.08);
             overflow: hidden;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             border: 1px solid #e9ecef;
+            width: 100%;
         }
         
         .ocorrencia-card:hover {
@@ -105,7 +108,7 @@
         }
         
         .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #6A5ACD;
             color: white;
             padding: 20px;
             position: relative;
@@ -118,25 +121,31 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, #ffc107, #28a745, #17a2b8, #fd7e14);
+            background: linear-gradient(90deg, #17a2b8 50%, #fd7e14 50%);
         }
         
         .os-number {
             font-size: 1.4em;
             font-weight: 700;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
         }
         
         .card-date {
             font-size: 0.9em;
             opacity: 0.9;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
         }
         
         .card-motorista {
             font-size: 1em;
             font-weight: 600;
-            margin-top: 8px;
             opacity: 0.95;
+            display: flex;
+            align-items: center;
         }
         
         .card-body {
@@ -145,11 +154,9 @@
         
         .info-row {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 15px;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
+            padding: 0;
         }
         
         .info-row:last-child {
@@ -161,6 +168,7 @@
             margin-right: 12px;
             width: 24px;
             text-align: center;
+            margin-top: 2px;
         }
         
         .info-content {
@@ -173,7 +181,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             font-weight: 600;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
         }
         
         .info-value {
@@ -215,12 +223,13 @@
             background: #f8f9fa;
             padding: 15px;
             border-radius: 8px;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #17a2b8;
             font-size: 0.9em;
             line-height: 1.5;
             color: #495057;
-            max-height: 100px;
+            max-height: 120px;
             overflow-y: auto;
+            white-space: pre-line;
         }
         
         .empty-state {
@@ -289,8 +298,10 @@
             }
             
             .cards-grid {
-                grid-template-columns: repeat(2, 1fr);
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
                 gap: 15px;
+                max-width: none;
             }
             
             .cards-container {
@@ -311,6 +322,12 @@
         }
         
         /* Responsividade */
+        @media (max-width: 1200px) {
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -410,29 +427,51 @@
                         </div>
                         
                         <div class="info-row">
-                            <div class="info-icon">👤</div>
+                            <div class="info-icon">📊</div>
                             <div class="info-content">
-                                <div class="info-label">Porteiro Responsável</div>
-                                <div class="info-value">{{ relatorio.porteiro_nome if relatorio.porteiro_nome else relatorio.porteiro_id if relatorio.porteiro_id else 'N/A' }}</div>
-                            </div>
-                        </div>
-                        
-                        {% if relatorio.motorista %}
-                        <div class="info-row">
-                            <div class="info-icon">🚗</div>
-                            <div class="info-content">
-                                <div class="info-label">Motorista</div>
-                                <div class="info-value">{{ relatorio.motorista }}</div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        {% if relatorio.dados %}
-                        {% set dados_str = relatorio.dados|string %}
-                        {% if 'carro' in dados_str.lower() or 'veiculo' in dados_str.lower() or 'placa' in dados_str.lower() or 'veículo' in dados_str.lower() %}
-                        <div class="info-row">
-                            <div class="info-icon">🚙</div>
-                            <div class="info-content">
-                                <div class="info-label">Informações do Veículo</div>
+                                <div class="info-label">Status</div>
                                 <div class="info-value">
-                                    {% if 'placa' in dados_str.lower() %}
+                                    <span class="status-badge status-{{ relatorio.status.lower().replace(' ', '-') if relatorio.status else 'pendente' }}">
+                                        {{ relatorio.status if relatorio.status else 'PENDENTE' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-icon">📝</div>
+                            <div class="info-content">
+                                <div class="info-label">Resumo da Ocorrência</div>
+                                <div class="resumo-content">
+OCORRÊNCIAS DE {{ (relatorio.tipo_nome if relatorio.tipo_nome else 'OCORRÊNCIA').upper() }} Data: {% if relatorio.criado_em %}{{ relatorio.criado_em }}{% else %}N/A{% endif %} Porteiro: {{ relatorio.porteiro_nome if relatorio.porteiro_nome else 'N/A' }}
+
+• Data da ocorrência: {{ relatorio.criado_em.split(' ')[0] if relatorio.criado_em else 'N/A' }}
+• Horário da ocorrência: {{ relatorio.criado_em.split(' ')[1] if relatorio.criado_em and ' ' in relatorio.criado_em else 'N/A' }}
+• Local da ocorrência: Não Informou
+• Linha: Não Informada
+• Veículo: {{ relatorio.numero_os if relatorio.numero_os else 'N/A' }}
+• Motorista: {{ relatorio.motorista if relatorio.motorista else 'N/A' }}
+• Matrícula: {{ relatorio.porteiro_id if relatorio.porteiro_id else 'N/A' }}
+• Observações: {{ relatorio.resumo if relatorio.resumo else 'Nenhuma observação' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <h3>📭 Nenhum relatório encontrado</h3>
+                <p>Não há relatórios que correspondam aos filtros aplicados.</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>Relatório gerado automaticamente pelo Sistema de Relatórios</p>
+            <p>Data de geração: {{ data_exportacao }}</p>
+        </div>
+    </div>
+</body>
+</html>
