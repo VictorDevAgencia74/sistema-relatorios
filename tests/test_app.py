@@ -2,7 +2,18 @@ import pytest
 import json
 import os
 from unittest.mock import patch, MagicMock
-from app import app
+import sys
+from pathlib import Path
+
+# Adicionar o diretório raiz ao path para importar app.py
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Importar diretamente do arquivo app.py usando importlib
+import importlib.util
+spec = importlib.util.spec_from_file_location("app_module", str(Path(__file__).parent.parent / "app.py"))
+app_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(app_module)
+app = app_module.app
 
 @pytest.fixture
 def client():
@@ -17,7 +28,7 @@ def client():
 @pytest.fixture
 def mock_supabase():
     """Mock do cliente Supabase"""
-    with patch('app.supabase') as mock:
+    with patch.object(app_module, 'supabase') as mock:
         yield mock
 
 class TestAuthentication:
@@ -112,8 +123,8 @@ class TestErrorHandlers:
     def test_500_error_handler(self, client):
         """Testa handler de erro 500"""
         # Simula erro interno acessando uma rota que pode causar erro
-        with patch('app.supabase.table') as mock_table:
-            mock_table.side_effect = Exception("Erro de teste")
+        with patch.object(app_module, 'supabase') as mock_supabase:
+            mock_supabase.table.side_effect = Exception("Erro de teste")
             response = client.get('/api/tipos-relatorio')
             assert response.status_code == 500
 
