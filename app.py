@@ -609,7 +609,7 @@ def atualizar_status(id):
             update_data).eq('id', id).execute()
 
         logger.info(f"Resposta do Supabase: {response}")
-        
+
         if response.data:
             log_msg = f"Status do relatório {id} atualizado para {novo_status}"
             logger.info(log_msg)
@@ -984,15 +984,4 @@ def download_backup(backup_id):
 # ==================== FIM DAS ROTAS DE BACKUP ====================
 
 if __name__ == '__main__':
-    # Configuração para desenvolvimento
-    # Em produção, use Gunicorn com o arquivo gunicorn.conf.py
-    import os
-    
-    # Verificar se está em modo de produção
-    if os.environ.get('FLASK_ENV') == 'production':
-        # Em produção, não executar o servidor de desenvolvimento
-        print("Modo de produção detectado. Use Gunicorn para executar a aplicação.")
-        print("Comando: gunicorn --config gunicorn.conf.py app:app")
-    else:
-        # Modo de desenvolvimento
-        app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
